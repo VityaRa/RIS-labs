@@ -11,7 +11,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-
 var (
 	dbHost     = os.Getenv("POSTGRES_HOST")
 	dbPort     = os.Getenv("POSTGRES_PORT")
@@ -46,11 +45,25 @@ func main() {
 	r.HandleFunc("/api/projects/{projectId}/tasks", getProjectTasks).Methods("GET")
 	r.HandleFunc("/api/projects/statuses", getProjectStatuses).Methods("GET")
 	r.HandleFunc("/api/tags", getTags).Methods("GET")
+	r.HandleFunc("/api/tasks", getAllTasks).Methods("GET")
 	r.HandleFunc("/api/tasks/{tagId}", getTasksByTag).Methods("GET")
 	r.HandleFunc("/api/tasks/{statusId}", getTasksByStatus).Methods("GET")
 	r.HandleFunc("/api/tasks/statuses", getTaskStatuses).Methods("GET")
 
+	r.HandleFunc("/api/projects", createProject).Methods("POST")
+	r.HandleFunc("/api/projects/{projectId}", updateProject).Methods("PUT")
+	r.HandleFunc("/projects/{projectId}", deleteProject).Methods("DELETE")
+
+	r.HandleFunc("/api/tasks", createTask).Methods("POST")
+	r.HandleFunc("/api/tasks/{taskId}", updateTask).Methods("PUT")
+	r.HandleFunc("/api/tasks/{taskId}", deleteTask).Methods("DELETE")
+
+	r.HandleFunc("/api/tags", createTag).Methods("POST")
+	r.HandleFunc("/api/tags/{tagId}", updateTag).Methods("PUT")
+	r.HandleFunc("/api/tags/{tagId}", deleteTag).Methods("DELETE")
+
+	r.HandleFunc("/api/tasks/statuses", createTaskStatus).Methods("POST")
+
 	fmt.Println("Server is running on port 3000...")
 	log.Fatal(http.ListenAndServe(":3000", r))
 }
-

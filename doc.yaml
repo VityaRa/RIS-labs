@@ -6,13 +6,7 @@ info:
 
 servers:
   - url: http://localhost:3000/api
-    description: Go server
-
-  - url: http://localhost:xxx/api
-    description: Python server
-
-  - url: http://localhost:xxx/api
-    description: Elixir server
+    description: Local development server
 
 paths:
   /projects:
@@ -21,126 +15,407 @@ paths:
       description: Returns a list of all projects
       responses:
         '200':
-          description: A list of projects
+          description: Successful operation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Project'
-  
+                $ref: '#/components/schemas/StandardArrayResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create a new project
+      description: Create a new project with the provided data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{projectId}:
+    put:
+      summary: Update a project
+      description: Update an existing project by ID
+      parameters:
+        - $ref: '#/components/parameters/projectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete a project
+      description: Delete a project by ID
+      parameters:
+        - $ref: '#/components/parameters/projectId'
+      responses:
+        '204':
+          description: Project deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /projects/{projectId}/tasks:
     get:
-      summary: Get all tasks in a project
-      description: Returns a list of all tasks belonging to a specific project
+      summary: Get project tasks
+      description: Returns all tasks for a specific project
       parameters:
-        - name: projectId
-          in: path 
-          required: true
-          schema:
-            type: integer
-          description: ID of the project
+        - $ref: '#/components/parameters/projectId'
       responses:
         '200':
-          description: A list of tasks in the project
+          description: Successful operation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Task'
+                $ref: '#/components/schemas/StandardArrayResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
         '404':
-          description: Project not found
-  
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /projects/statuses:
     get:
-      summary: Get all project statuses
-      description: Returns a list of all possible project statuses
+      summary: Get project statuses
+      description: Returns all available project statuses
       responses:
         '200':
-          description: A list of project statuses
+          description: Successful operation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProjectStatus'
+                $ref: '#/components/schemas/StandardArrayResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectStatus'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks:
+    get:
+      summary: Get all tasks
+      description: Returns all tasks across all projects
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardArrayResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create a new task
+      description: Create a new task with the provided data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/{taskId}:
+    put:
+      summary: Update a task
+      description: Update an existing task by ID
+      parameters:
+        - $ref: '#/components/parameters/taskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete a task
+      description: Delete a task by ID
+      parameters:
+        - $ref: '#/components/parameters/taskId'
+      responses:
+        '204':
+          description: Task deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/{tagId}:
+    get:
+      summary: Get tasks by tag
+      description: Returns all tasks associated with a specific tag
+      parameters:
+        - $ref: '#/components/parameters/tagId'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardArrayResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/{statusId}:
+    get:
+      summary: Get tasks by status
+      description: Returns all tasks with a specific status
+      parameters:
+        - $ref: '#/components/parameters/statusId'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardArrayResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /tasks/statuses:
+    get:
+      summary: Get task statuses
+      description: Returns all available task statuses
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardArrayResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TaskStatus'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create a new task status
+      description: Create a new task status with the provided data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskStatusInput'
+      responses:
+        '201':
+          description: Task status created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TaskStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /tags:
     get:
       summary: Get all tags
-      description: Returns a list of all tags
+      description: Returns all available tags
       responses:
         '200':
-          description: A list of tags
+          description: Successful operation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Tag'
-  
-  /tasks/{tagId}:
-    get:
-      summary: Get all tasks by tag
-      description: Returns a list of all tasks associated with a specific tag
-      parameters:
-        - name: tagId
-          in: path
-          required: true
-          schema:
-            type: integer
-          description: ID of the tag
+                $ref: '#/components/schemas/StandardArrayResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tag'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create a new tag
+      description: Create a new tag with the provided data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagInput'
       responses:
-        '200':
-          description: A list of tasks with the specified tag
+        '201':
+          description: Tag created successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Task'
-        '404':
-          description: Tag not found
-  
-  /tasks/{statusId}:
-    get:
-      summary: Get all tasks by status
-      description: Returns a list of all tasks with a specific status
-      parameters:
-        - name: statusId
-          in: query
-          required: true
-          schema:
-            type: integer
-          description: ID of the task status
-      responses:
-        '200':
-          description: A list of tasks with the specified status
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Task'
+                $ref: '#/components/schemas/StandardResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
-  
-  /tasks/statuses:
-    get:
-      summary: Get all task statuses
-      description: Returns a list of all possible task statuses
+  /tags/{tagId}:
+    put:
+      summary: Update a tag
+      description: Update an existing tag by ID
+      parameters:
+        - $ref: '#/components/parameters/tagId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagInput'
       responses:
         '200':
-          description: A list of task statuses
+          description: Tag updated successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TaskStatus'
+                $ref: '#/components/schemas/StandardResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete a tag
+      description: Delete a tag by ID
+      parameters:
+        - $ref: '#/components/parameters/tagId'
+      responses:
+        '204':
+          description: Tag deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   schemas:
+    StandardResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          nullable: true
+        error:
+          type: string
+          nullable: true
+      required:
+        - data
+        - error
+
+    StandardArrayResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+          nullable: true
+        error:
+          type: string
+          nullable: true
+      required:
+        - data
+        - error
+
     Project:
       type: object
       properties:
@@ -157,7 +432,26 @@ components:
         status_id:
           type: integer
           example: 2
-    
+      required:
+        - title
+        - status_id
+
+    ProjectInput:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Website Redesign"
+        description:
+          type: string
+          example: "Complete redesign of company website"
+        status_id:
+          type: integer
+          example: 2
+      required:
+        - title
+        - status_id
+
     Task:
       type: object
       properties:
@@ -181,7 +475,35 @@ components:
           type: string
           format: date-time
           example: "2023-12-31T23:59:59Z"
-    
+      required:
+        - title
+        - project_id
+        - status_id
+
+    TaskInput:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Create wireframes"
+        description:
+          type: string
+          example: "Design wireframes for all pages"
+        project_id:
+          type: integer
+          example: 1
+        status_id:
+          type: integer
+          example: 3
+        deadline:
+          type: string
+          format: date-time
+          example: "2023-12-31T23:59:59Z"
+      required:
+        - title
+        - project_id
+        - status_id
+
     Tag:
       type: object
       properties:
@@ -195,7 +517,21 @@ components:
         description:
           type: string
           example: "User interface related tasks"
-    
+      required:
+        - title
+
+    TagInput:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "UI"
+        description:
+          type: string
+          example: "User interface related tasks"
+      required:
+        - title
+
     ProjectStatus:
       type: object
       properties:
@@ -206,7 +542,9 @@ components:
         name:
           type: string
           example: "Not Started"
-    
+      required:
+        - name
+
     TaskStatus:
       type: object
       properties:
@@ -217,3 +555,80 @@ components:
         name:
           type: string
           example: "To Do"
+      required:
+        - name
+
+    TaskStatusInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "To Do"
+      required:
+        - name
+
+  parameters:
+    projectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: ID of the project
+    taskId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: ID of the task
+    tagId:
+      name: tagId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: ID of the tag
+    statusId:
+      name: statusId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: ID of the status
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StandardResponse'
+            properties:
+              error:
+                type: string
+                example: "Invalid request data"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StandardResponse'
+            properties:
+              error:
+                type: string
+                example: "Resource not found"
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StandardResponse'
+            properties:
+              error:
+                type: string
+                example: "Internal server error"
