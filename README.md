@@ -5,6 +5,7 @@ RIS labs completion
 * python - TODO
 * ERD - Done - ![ERD](./ERD.png?raw=true "ERD")
 * OpenAPI v3 spec - Done
+* Frontend 
 
 # Project Management API
 
