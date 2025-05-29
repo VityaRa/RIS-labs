@@ -50,6 +50,26 @@ services:
 
     restart: unless-stopped
 
+  go-api:
+    container_name: go-api
+    build:
+      context: ./server/go
+      dockerfile: Dockerfile
+    networks:
+      - postgres
+    depends_on:
+      - postgres
+    ports:
+      - 3001:3000
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=db
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=dbpassword
+      - SERVER_PORT=3000
+
+
 networks:
   postgres:
     driver: bridge

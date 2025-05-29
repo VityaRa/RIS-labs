@@ -21,6 +21,14 @@ var (
 
 var db *sql.DB
 
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Received %s request for %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
@@ -40,15 +48,16 @@ func main() {
 	fmt.Println("Successfully connected")
 
 	r := mux.NewRouter()
+	r.Use(loggingMiddleware)
 
 	r.HandleFunc("/api/projects", getProjects).Methods("GET")
 	r.HandleFunc("/api/projects/{projectId}/tasks", getProjectTasks).Methods("GET")
 	r.HandleFunc("/api/projects/statuses", getProjectStatuses).Methods("GET")
 	r.HandleFunc("/api/tags", getTags).Methods("GET")
 	r.HandleFunc("/api/tasks", getAllTasks).Methods("GET")
-	r.HandleFunc("/api/tasks/{tagId}", getTasksByTag).Methods("GET")
-	r.HandleFunc("/api/tasks/{statusId}", getTasksByStatus).Methods("GET")
 	r.HandleFunc("/api/tasks/statuses", getTaskStatuses).Methods("GET")
+	r.HandleFunc("/api/tasks/tag/{tagId}", getTasksByTag).Methods("GET")
+	r.HandleFunc("/api/tasks/status/{statusId}", getTasksByStatus).Methods("GET")
 
 	r.HandleFunc("/api/projects", createProject).Methods("POST")
 	r.HandleFunc("/api/projects/{projectId}", updateProject).Methods("PUT")
