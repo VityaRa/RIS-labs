@@ -3,6 +3,7 @@ package main
 import (
 	Response "api/response"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -160,7 +161,8 @@ func getTasksByTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTasksByStatus(w http.ResponseWriter, r *http.Request) {
-	statusID, err := strconv.Atoi(r.URL.Query().Get("statusId"))
+	vars := mux.Vars(r)
+	statusID, err := strconv.Atoi(vars["statusId"])
 	if err != nil {
 		Response.Send(w, http.StatusBadRequest, nil, "Invalid status ID")
 		return
@@ -187,12 +189,16 @@ func getTasksByStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTaskStatuses(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, name FROM taskstatus")
+	log.Printf("getTaskStatuses request started")
+
+	rows, err := db.Query("SELECT id, name FROM taskstatuses")
+	log.Printf("queried")
 	if err != nil {
 		Response.Send(w, http.StatusInternalServerError, nil, err.Error())
 		return
 	}
 	defer rows.Close()
+	log.Printf("test1")
 
 	var statuses []TaskStatus
 	for rows.Next() {
@@ -203,6 +209,7 @@ func getTaskStatuses(w http.ResponseWriter, r *http.Request) {
 		}
 		statuses = append(statuses, s)
 	}
+	log.Printf("2")
 
 	Response.Send(w, http.StatusOK, statuses, "")
 }
@@ -493,7 +500,7 @@ func createTaskStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := db.QueryRow(`
-        INSERT INTO taskstatus (name)
+        INSERT INTO taskstatuses (name)
         VALUES ($1)
         RETURNING id
     `, s.Name).Scan(&s.ID)
