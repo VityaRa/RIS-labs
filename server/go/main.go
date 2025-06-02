@@ -29,6 +29,21 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow all origins (you can specify specific domains instead)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
@@ -48,6 +63,7 @@ func main() {
 	fmt.Println("Successfully connected")
 
 	r := mux.NewRouter()
+	r.Use(enableCORS)
 	r.Use(loggingMiddleware)
 
 	r.HandleFunc("/api/projects", getProjects).Methods("GET")
@@ -61,7 +77,7 @@ func main() {
 
 	r.HandleFunc("/api/projects", createProject).Methods("POST")
 	r.HandleFunc("/api/projects/{projectId}", updateProject).Methods("PUT")
-	r.HandleFunc("/projects/{projectId}", deleteProject).Methods("DELETE")
+	r.HandleFunc("/api/projects/{projectId}", deleteProject).Methods("DELETE")
 
 	r.HandleFunc("/api/tasks", createTask).Methods("POST")
 	r.HandleFunc("/api/tasks/{taskId}", updateTask).Methods("PUT")

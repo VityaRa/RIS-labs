@@ -311,24 +311,28 @@ func updateProject(w http.ResponseWriter, r *http.Request) {
 func deleteProject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	projectID, err := strconv.Atoi(vars["projectId"])
+	var p Project
+
 	if err != nil {
 		Response.Send(w, http.StatusBadRequest, nil, "Invalid project ID")
 		return
 	}
 
+	p.ID = projectID
+
 	result, err := db.Exec("DELETE FROM project WHERE id = $1", projectID)
 	if err != nil {
-		Response.Send(w, http.StatusInternalServerError, nil, err.Error())
+		Response.Send(w, http.StatusInternalServerError, p, err.Error())
 		return
 	}
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
-		Response.Send(w, http.StatusNotFound, nil, "Project not found")
+		Response.Send(w, http.StatusNotFound, p, "Project not found")
 		return
 	}
 
-	Response.Send(w, http.StatusNoContent, nil, "")
+	Response.Send(w, http.StatusOK, p, "")
 }
 
 // Task CRUD
