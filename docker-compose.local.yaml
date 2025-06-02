@@ -1,5 +1,7 @@
 version: "3.9"
+
 services:
+  # Database Services
   postgres:
     container_name: postgres_container
     image: postgres:14.8-alpine3.18
@@ -20,7 +22,7 @@ services:
       start_period: 10s
     restart: unless-stopped
     networks:
-    - postgres
+      - app-network
     deploy:
       resources:
         limits:
@@ -30,35 +32,29 @@ services:
   pgadmin:
     container_name: pgadmin_container
     image: dpage/pgadmin4:6.19
-
     depends_on:
       - postgres
-
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
       PGADMIN_CONFIG_SERVER_MODE: "False"
-
     volumes:
       - ./pgadmin:/var/lib/pgadmin
-
     ports:
       - ${PGADMIN_PORT:-5050}:80
-
     networks:
-      - postgres
-
+      - app-network
     restart: unless-stopped
 
+  # Backend Services
   go-api:
-    container_name: go-api
+    image: go-api
+    container_name: go-server
     build:
       context: ./server/go
       dockerfile: Dockerfile
     networks:
-      - postgres
-    ports:
-      - 3001:3000
+      - app-network
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
@@ -66,8 +62,36 @@ services:
       - POSTGRES_USER=dbuser
       - POSTGRES_PASSWORD=dbpassword
       - SERVER_PORT=3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Frontend Service
+  frontend:
+    image: frontend-app
+    build:
+      context: ./pmaster
+      dockerfile: Dockerfile
+    networks:
+      - app-network
+    depends_on:
+      - go-api
+
+  # Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - go-api
+    networks:
+      - app-network
 
 networks:
-  postgres:
+  app-network:
     driver: bridge
