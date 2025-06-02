@@ -44,8 +44,8 @@ export const ProjectDetail = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="container flex start" style={{color: 'white'}} onClick={() => navigate('/projects')}>
-        BACK
+      <div className="container flex start cursor-pointer" style={{color: 'white'}} onClick={() => navigate('/projects')}>
+        {"<-"}
       </div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold"  style={{color: 'white'}} >{project.title}</h1>

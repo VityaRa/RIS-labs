@@ -160,6 +160,11 @@ export const KanbanBoard = ({ projectId }: KanbanBoardProps) => {
           />
         ))}
       </div>
+      <div className="flex gap-4 justify-center">
+        <span style={{color: 'white'}} onClick={() => handleCreateTaskClick(1)}>
+          Create new Task
+        </span>
+      </div>
       {isCreateModalOpen && selectedStatusId && (
         <CreateTaskModal
           statusId={selectedStatusId}
