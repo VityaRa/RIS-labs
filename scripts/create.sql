@@ -67,10 +67,13 @@ ALTER TABLE IF EXISTS public.task
     ON DELETE SET NULL;
 
 ALTER TABLE IF EXISTS public.task
+    DROP CONSTRAINT IF EXISTS task_project_fk;
+
+ALTER TABLE IF EXISTS public.task
     ADD CONSTRAINT task_project_fk FOREIGN KEY (project_id)
     REFERENCES public.project (id)
     ON UPDATE CASCADE
-    ON DELETE SET NULL;
+    ON DELETE CASCADE;
 
 ALTER TABLE IF EXISTS public.tasktag
     ADD CONSTRAINT tasktag_task_fk FOREIGN KEY (task_id)
