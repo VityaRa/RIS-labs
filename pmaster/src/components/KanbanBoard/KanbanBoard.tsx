@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { getTaskStatuses } from "../../api/statuses";
-import { getTasksByStatus, updateTask } from "../../api/tasks";
+import { deleteTask, getTasksByStatus, updateTask } from "../../api/tasks";
 import type { TaskStatus, Task } from "../../types/apiTypes";
 import { StatusColumn } from "../StatusColumn/StatusColumn";
 import { CreateTaskModal } from "../CreateTaskModal";
+import { PlusCircleIcon } from "@heroicons/react/24/outline";
 
 interface KanbanBoardProps {
   projectId: number;
@@ -16,20 +17,7 @@ export const KanbanBoard = ({ projectId }: KanbanBoardProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
-
-  const handleTaskCreated = (newTask: Task) => {
-    setTasks((prev) => {
-      const newTasks = { ...prev };
-      const statusId = newTask.status_id;
-
-      if (!newTasks[statusId]) {
-        newTasks[statusId] = [];
-      }
-
-      newTasks[statusId] = [newTask, ...newTasks[statusId]];
-      return newTasks;
-    });
-  };
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const handleCreateTaskClick = (statusId: number) => {
     setSelectedStatusId(statusId);
@@ -143,6 +131,54 @@ export const KanbanBoard = ({ projectId }: KanbanBoardProps) => {
     }
   };
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
+
+    try {
+      await deleteTask(taskId);
+      setTasks((prev) => {
+        const newTasks = { ...prev };
+        for (const statusId in newTasks) {
+          newTasks[statusId] = newTasks[statusId].filter(
+            (t) => t.id !== taskId
+          );
+        }
+        return newTasks;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete task");
+    }
+  };
+
+  const handleTaskCreatedOrUpdated = (updatedTask: Task) => {
+    setTasks((prev) => {
+      const newTasks = { ...prev };
+
+      // Remove from old status if it exists
+      for (const statusId in newTasks) {
+        newTasks[statusId] = newTasks[statusId].filter(
+          (t) => t.id !== updatedTask.id
+        );
+      }
+
+      // Add to new status
+      const statusId = updatedTask.status_id;
+      if (!newTasks[statusId]) {
+        newTasks[statusId] = [];
+      }
+      newTasks[statusId].unshift(updatedTask);
+
+      return newTasks;
+    });
+    setEditingTask(null);
+    setIsCreateModalOpen(false);
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -156,23 +192,35 @@ export const KanbanBoard = ({ projectId }: KanbanBoardProps) => {
             tasks={tasks[status.id] || []}
             onDragStart={handleDragStart}
             onDrop={handleDrop}
-            onCreateTask={handleCreateTaskClick}
+            onEditTask={handleEditTask}
+            onDeleteTask={handleDeleteTask}
           />
         ))}
       </div>
       <div className="flex gap-4 justify-center">
-        <span style={{color: 'white'}} onClick={() => handleCreateTaskClick(1)}>
-          Create new Task
+        <span
+          style={{ color: "white" }}
+          onClick={() => handleCreateTaskClick(1)}
+        >
+          <PlusCircleIcon className="h-12 w-12 cursor-pointer"/>
         </span>
       </div>
-      {isCreateModalOpen && selectedStatusId && (
+      {(isCreateModalOpen || editingTask) && (
         <CreateTaskModal
-          statusId={selectedStatusId}
+          statusId={editingTask?.status_id ?? selectedStatusId ?? statuses[0]?.id}
           projectId={projectId}
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onTaskCreated={handleTaskCreated}
+          isOpen={isCreateModalOpen || !!editingTask}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setEditingTask(null);
+          }}
+          onTaskCreated={handleTaskCreatedOrUpdated}
           availableStatuses={statuses}
+          initialValues={
+            editingTask
+              ? editingTask
+              : undefined
+          }
         />
       )}
     </>
