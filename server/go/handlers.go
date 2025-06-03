@@ -360,6 +360,8 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 func updateTask(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	taskID, err := strconv.Atoi(vars["taskId"])
+	log.Println("[updateTask][taskId]", taskID)
+
 	if err != nil {
 		Response.Send(w, http.StatusBadRequest, nil, "Invalid task ID")
 		return
@@ -412,7 +414,10 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Response.Send(w, http.StatusNoContent, nil, "")
+	var task Task
+	task.ID = taskID
+
+	Response.Send(w, http.StatusOK, task, "")
 }
 
 // Tag CRUD

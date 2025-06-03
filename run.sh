@@ -1,1 +1,1 @@
-docker compose -f docker-compose.local.yaml up --build --force-recreate
+docker compose -f docker-compose.local.yaml up --build

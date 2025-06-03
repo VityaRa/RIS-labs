@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Task, TaskStatus } from "../types/apiTypes";
-import { createTask } from "../api/tasks";
+import { createTask, updateTask } from "../api/tasks";
 
 interface CreateTaskModalProps {
   statusId: number;
@@ -9,6 +9,7 @@ interface CreateTaskModalProps {
   onClose: () => void;
   onTaskCreated: (newTask: Task) => void;
   availableStatuses: TaskStatus[];
+  initialValues?: Task;
 }
 
 export const CreateTaskModal = ({
@@ -18,13 +19,28 @@ export const CreateTaskModal = ({
   onClose,
   onTaskCreated,
   availableStatuses,
+  initialValues,
 }: CreateTaskModalProps) => {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    deadline: "",
-    status_id: statusId,
-  });
+  const isEditing = initialValues !== undefined;
+  const { title, btnText, loaderText } = isEditing ? {
+    title: 'Edit task',
+    btnText: 'Edit',
+    loaderText: 'Editing...'
+  } : {
+    title: 'Create new task',
+    btnText: 'Create',
+    loaderText: 'Creating...'
+  }
+  const [formData, setFormData] = useState(
+    initialValues
+      ? { ...initialValues, status_id: statusId }
+      : {
+          title: "",
+          description: "",
+          deadline: "",
+          status_id: statusId,
+        }
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +59,17 @@ export const CreateTaskModal = ({
     setError(null);
 
     try {
+      if (isEditing) {
+        const response = await updateTask(initialValues.id, {
+          ...formData,
+          project_id: projectId,
+          status_id: Number(formData.status_id),
+          deadline: formData.deadline,
+        });
+        onTaskCreated(response.data);
+        onClose();
+        return;
+      }
       const response = await createTask({
         ...formData,
         project_id: projectId,
@@ -65,7 +92,7 @@ export const CreateTaskModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-white">Create New Task</h3>
+          <h3 className="text-xl font-semibold text-white">{title}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             &times;
           </button>
@@ -143,7 +170,7 @@ export const CreateTaskModal = ({
               disabled={isLoading}
               className="px-4 py-2 bg-blue-600 rounded text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              {isLoading ? "Creating..." : "Create Task"}
+              {isLoading ? loaderText : btnText}
             </button>
           </div>
         </form>

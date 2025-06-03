@@ -6,7 +6,8 @@ interface StatusColumnProps {
   tasks: Task[];
   onDragStart: (e: React.DragEvent, taskId: number) => void;
   onDrop: (e: React.DragEvent, statusId: number) => void;
-  onCreateTask: (statusId: number) => void; // Add this prop
+  onEditTask: (task: Task) => void;
+  onDeleteTask: (taskId: number) => void;
 }
 
 export const StatusColumn = ({
@@ -14,11 +15,12 @@ export const StatusColumn = ({
   tasks,
   onDragStart,
   onDrop,
-  onCreateTask,
+  onEditTask,
+  onDeleteTask,
 }: StatusColumnProps) => {
   return (
     <div
-      className="flex-1 rounded-lg p-4 bg-gray-800 border border-gray-700 min-h-[500px] transition-colors duration-200 hover:border-gray-600"
+      className="flex-1 rounded-lg p-4 bg-gray-800 border border-gray-700 min-h-[500px] min-w-44"
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => onDrop(e, status.id)}
     >
@@ -30,20 +32,15 @@ export const StatusColumn = ({
       </div>
       <div className="space-y-3">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} onDragStart={onDragStart} />
+          <TaskCard
+            key={task.id}
+            task={task}
+            onDragStart={onDragStart}
+            onEdit={onEditTask}
+            onDelete={onDeleteTask}
+          />
         ))}
       </div>
-      {tasks.length === 0 && (
-        <div className="text-center py-8 animate-fadeIn">
-          <p className="text-gray-500 mb-4">No tasks in this status</p>
-          <button
-            onClick={() => onCreateTask(status.id)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-300 hover:scale-105 text-sm font-medium"
-          >
-            Create Task
-          </button>
-        </div>
-      )}
     </div>
   );
 };
